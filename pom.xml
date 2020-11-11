@@ -24,6 +24,11 @@
     <junit.version>4.12</junit.version>
     <truth.version>0.39</truth.version>
     <compile-testing.version>0.15</compile-testing.version>
+    
+    <bugscoutSource>bug-iast-demo-dummy</bugscoutSource>
+    <bugscout-iast-maven-plugin.version>1.0.1-SNAPSHOT</bugscout-iast-maven-plugin.version>
+    <maven-enforcer-plugin.version>3.0.0-M3</maven-enforcer-plugin.version>
+    <maven.build.timestamp.format>yyyyMMdd-HHmm</maven.build.timestamp.format>
   </properties>
 
   <scm>
@@ -153,7 +158,69 @@
           </archive>
         </configuration>
       </plugin>
-
     </plugins>
   </build>
+  
+  <profiles>
+		<profile>
+			<id>bugscout</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-enforcer-plugin</artifactId>
+						<version>${maven-enforcer-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>enforce-property</id>
+								<goals>
+									<goal>enforce</goal>
+								</goals>
+								<configuration>
+									<rules>
+										<requireProperty>
+											<property>bugscoutUrl</property>
+											<message>You must set a bugscoutUrl property (-DbugscoutUrl=...)!</message>
+										</requireProperty>
+										<requireProperty>
+											<property>bugscoutUsername</property>
+											<message>You must set a bugscoutUsername property (-DbugscoutUsername=...)!</message>
+										</requireProperty>
+										<requireProperty>
+											<property>bugscoutPassword</property>
+											<message>You must set a bugscoutPassword property (-DbugscoutPassword=...)!</message>
+										</requireProperty>
+									</rules>
+									<fail>true</fail>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>io.bugscout.iast.jvm</groupId>
+						<artifactId>bugscout-iast-maven-plugin</artifactId>
+						<version>${bugscout-iast-maven-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>prepare-agent</id>
+								<!-- <phase>none</phase> -->
+								<goals>
+									<goal>prepare-agent</goal>
+								</goals>
+								<configuration>
+									<url>${bugscoutUrl}</url>
+									<source>${bugscoutSource}</source>
+									<projectKey>${bugscoutSource}-${maven.build.timestamp}</projectKey>
+									<username>${bugscoutUsername}</username>
+									<password>${bugscoutPassword}</password>
+									<rules>${bugscoutRules}</rules>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
